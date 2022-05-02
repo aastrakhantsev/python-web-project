@@ -56,33 +56,37 @@ def add(message):
     ticker = (message.text.split(' ')[1])
     num = (message.text.split(' ')[2])
     if ticker in wal:
-        wal[ticker] += num
+        wal[ticker] += float(num)
     else:
-        wal[ticker] = num
-    bot.send_message(message.chat.id, f'{num} of {ticker} added to wallet', parse_mode='html')
+        wal[ticker] = float(num)
+    bot.send_message(message.chat.id, f'{num} {ticker} added to wallet', parse_mode='html')
 
 
 @bot.message_handler(commands=['remove'])
 def remove(message):
     ticker = (message.text.split(' ')[1])
     num = (message.text.split(' ')[2])
+    if num == 'all':
+        num = wal[ticker]
     if ticker in wal:
-        wal[ticker] -= num
-        if wal[ticker] < 0:
+        wal[ticker] -= float(num)
+        if wal[ticker] <= 0:
             wal.pop(ticker)
     else:
         bot.send_message(message.chat.id, f'No {ticker} in your wallet', parse_mode='html')
-    bot.send_message(message.chat.id, f'{num} of {ticker} removed from wallet', parse_mode='html')
+    bot.send_message(message.chat.id, f'{num} {ticker} removed from wallet', parse_mode='html')
 
 
 @bot.message_handler(commands=['wallet'])
 def wallet(message):
     text = ""
     summary = 0
-    for (key, value) in wal:
-        text += f"{value} of {key},  which is <i>${value * get_rate(key)}</i>\n"
-        summary += value * get_rate(key)
-    text += f"\nYour wallet is {summary}"
+    for item in wal.items():
+        key = item[0]
+        value = item[1]
+        text += f"{float(value)} of {key},  which is <i>${float(value) * float(get_rate(key))}</i>\n"
+        summary += float(value) * float(get_rate(key))
+    text += f"\nYour wallet is <i>${summary}</i>"
     bot.send_message(message.chat.id, text, parse_mode='html')
 
 
