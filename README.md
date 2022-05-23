@@ -8,5 +8,3 @@
 <b>python3 -m pip install -r requirements.txt</b>
 
 <b>python3 app.py</b>
-
-
