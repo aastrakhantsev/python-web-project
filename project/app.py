@@ -1,45 +1,44 @@
+import os
 import requests
 import telebot
 from bs4 import BeautifulSoup
 from portfolio import wal
 
-bot = telebot.TeleBot('5157785277:AAHiFt0hFK7YkABLgHLIU46xjuUjN-9lcgQ')
+bot = telebot.TeleBot(os.getenv('BOT_TOKEN'))
 
 
 def get_rate(ticker):
-    response = requests.get(f'https://finance.yahoo.com/quote/{ticker}-USD?p={ticker}-USD')
-    html = BeautifulSoup(response.text, 'html.parser')
-    x = str(html.select('#quote-header-info > div.My\(6px\).Pos\(r\).smartphone_Mt\(6px\).W\(100\%\).D\(ib\).smartphone_Mb\(10px\).W\(100\%\)--mobp > div.D\(ib\).Va\(m\).Maw\(65\%\).Ov\(h\) > div > fin-streamer.Fw\(b\).Fz\(36px\).Mb\(-4px\).D\(ib\)'))
-    ans = ""
-    for i in range(x.find('value="') + 7, len(x)):
-        if x[i] == '\"':
-            break
-        ans += x[i]
-    return ans
+    html = requests.get(f'https://finance.yahoo.com/quote/{ticker}-USD?p={ticker}-USD')
+    soup = BeautifulSoup(html.text, 'html.parser')
+    result = str(soup.find('fin-streamer', attrs={'class': 'Fw(b) Fz(36px) Mb(-4px) D(ib)'}).contents[0])
+    return result
 
 
 @bot.message_handler(commands=['start', 'help'])
 def main(message):
-    text = "/help - to see this message \n"
-    text += "/guide - to know basics of interaction \n\n"
-    text += "/rate - core function \n"
-    text += "/add - add currency to your wallet\n"
-    text += "/remove - remove currency to your wallet\n"
-    text += "/wallet - get wallet info\n"
-
+    text = (
+        '/help - to see this message \n'
+        '/guide - to know basics of interaction \n\n'
+        '/rate - core function \n'
+        '/add - add currency to your wallet\n'
+        '/remove - remove currency to your wallet\n'
+        '/wallet - get wallet info\n'
+    )
     bot.send_message(message.chat.id, text)
 
 
 @bot.message_handler(commands=['guide'])
 def guide(message):
-    text = "<i>/rate</i>\n"
-    text += "Enter  <b>/rate + [ticker]</b>    to get rate of cryptocurrency\n\n"
-    text += "<i>/add</i>\n"
-    text += "Enter  <b>/add + [ticker] + [number]</b>    to add <i>number</i> of needed currency to your wallet\n\n"
-    text += "<i>/remove</i>\n"
-    text += "Enter  <b>/remove + [ticker] + [number]</b>    to remove <i>number</i> of needed currency to your wallet\n\n"
-    text += "<i>/wallet</i>\n"
-    text += "Enter  <b>/wallet</b>    to get your portfolio"
+    text = (
+        '<i>/rate</i>\n'
+        'Enter  <b>/rate + [ticker]</b>    to get rate of cryptocurrency\n\n'
+        '<i>/add</i>\n'
+        'Enter  <b>/add + [ticker] + [number]</b>    to add <i>number</i> of needed currency to your wallet\n\n'
+        '<i>/remove</i>\n'
+        'Enter  <b>/remove + [ticker] + [number]</b>    to remove <i>number</i> of needed currency to your wallet\n\n'
+        '<i>/wallet</i>\n'
+        'Enter  <b>/wallet</b>    to get your portfolio'
+    )
     bot.send_message(message.chat.id, text, parse_mode='html')
 
 
@@ -47,7 +46,7 @@ def guide(message):
 def rate(message):
     ticker = (message.text.split(' ')[1])
     val = get_rate(ticker)
-    text = f"One <b>{ticker}</b> is <b>${val}</b>"
+    text = f'One <b>{ticker}</b> is <b>${val}</b>'
     bot.send_message(message.chat.id, text, parse_mode='html')
 
 
@@ -79,14 +78,14 @@ def remove(message):
 
 @bot.message_handler(commands=['wallet'])
 def wallet(message):
-    text = ""
+    text = ''
     summary = 0
     for item in wal.items():
         key = item[0]
         value = item[1]
-        text += f"{float(value)} of {key},  which is <i>${float(value) * float(get_rate(key))}</i>\n"
+        text += f'{float(value)} of {key},  that is <i>${float(value) * float(get_rate(key))}</i>\n'
         summary += float(value) * float(get_rate(key))
-    text += f"\nYour wallet is <i>${summary}</i>"
+    text += f'\nYour wallet is <i>${summary}</i>'
     bot.send_message(message.chat.id, text, parse_mode='html')
 
 
